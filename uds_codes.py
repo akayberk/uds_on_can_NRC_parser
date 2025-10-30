@@ -1,0 +1,91 @@
+# ----------------------------
+# UDS services, NRC and DID map
+# ----------------------------
+
+
+NRC_MAP = {
+    0x10: "GeneralReject",
+    0x11: "ServiceNotSupported",
+    0x12: "SubFunctionNotSupported",
+    0x13: "IncorrectMessageLengthOrInvalidFormat",
+    0x14: "ResponseTooLong",
+    0x21: "BusyRepeatRequest",
+    0x22: "ConditionsNotCorrect",
+    0x24: "RequestSequenceError",
+    0x31: "RequestOutOfRange",
+    0x33: "SecurityAccessDenied",
+    0x35: "InvalidKey",
+    0x36: "ExceedNumberOfAttempts",
+    0x37: "RequiredTimeDelayNotExpired",
+    0x7F: "GeneralProgrammingFailure",
+    0x78: "ResponsePending",
+    0x83: "UploadDownloadNotAccepted",
+}
+
+UDS_SERVICES = {
+    0x10: ("DiagnosticSessionControl", "Start/stop diagnostic session"),
+    0x11: ("ECUReset", "Reset ECU"),
+    0x14: ("ClearDiagnosticInformation", "Clear DTCs"),
+    0x19: ("ReadDTCInformation", "Request DTC information"),
+    0x22: ("ReadDataByIdentifier", "Read data by identifier (e.g., VIN)"),
+    0x23: ("ReadMemoryByAddress", "Read memory by address"),
+    0x27: ("SecurityAccess", "Security access challenge/response"),
+    0x28: ("CommunicationControl", "Com_control"),
+    0x29: ("Authentication", "Get auth"),
+    0x2A: ("ReadDataByPeriodicIdentifier", "Read data by periodic identifier"),
+    0x2E: ("WriteDataByIdentifier", "Write data by identifier"),
+    0x2F: ("IO_ControlByIdentifier", "Write data by identifier"),
+    0x31: ("RoutineControl", "Start/stop/query routines"),
+    0x3E: ("TesterPresent", "Keepalive / Tester present"),
+    0x34: ("RequestDownload", "Request to start a download"),
+    0x35: ("RequestUpload", "Request to start an upload"),
+    0x36: ("TransferData", "Transfer data (block)"),
+    0x37: ("RequestTransferExit", "End transfer session"),
+    0x2F: ("InputOutputControlByIdentifier", "IO control by identifier"),
+    0x85: ("ControlDTCSettings", "Checks DTC Settings"),
+    0x86: ("ResponseOnEvent", "Checks DTC Settings"),
+    
+}
+
+# Example DID map (user said they added SUB_FUNCTIONS). Keep a small set; user can replace with their full dict.
+DID_MAP = {
+    0xF170: "EOL_Fingerprint_Data_Identifer",
+    0xF171: "general_Fingerprint_Data_Identifer#1",
+    0xF172: "general_Fingerprint_Data_Identifer#2",
+    0xF173: "general_Finger_print_Data_Identifer#3",
+    0xF180: "Boot_Software_Identification_Data_Identifier",
+    0xF181: "application_Software_Identification_Data_Identifier",
+    0xF183: "boot_Software_Fingerprint",
+    0xF184: "application_Software_Fingerprint_Data_Identifier",
+    0xF185: "application_Data_Fingerprint_Data_Identifier",
+    0xF186: "Active_Diagnostic_Session_Data_Identifier",
+    0xF187: "vehicle_Manufacturer_Spara_Part_Number_Data_Identifier",
+    0xF188: "vehicle_Manufacturer_ECU_Software_Number_Data_Identifier",
+    0xF189: "vehicle_Manufacturer_ECU_Software_Version_Number_Data_Identifier",
+    0xF18A: "systemS_upplier_Identifier_Data_Identifier",
+    0xF18B: "ECU_Manufacturing_Date_Data_Identifier",
+    0xF18C: "ECU_Serial_Number_Data_Identifier",
+    0xF190: "VIN_Data_Identifier",
+    0xF191: "vehicle_Manufacturer_ECU_Hardware_Number_Data_Identifier",
+    0xF192: "system_Supplier_ECU_Hardware_Number_Data_Identifier",
+    0xF193: "system_SupplierECUHardwareVersionNumberDataIdentifier",
+    0xF194: "system_Supplier_ECU_Software_Number_Data_Identifier",
+    0xF195: "system_Supplier_ECU_Software_Version_Number_Data_Identifier",
+    0xF196: "exhaust_Regulation_or_Type_Approval_Number_Data_Identifier",
+    0xF197: "system_Name_or_Engine_Type_Data_Identifier",
+    0xF19D: "ECU_Installation_Date_Data_Identifier",
+    0xF19E: "ODX_File_Data_Identifier",
+    0xF1A1: "data_Set_Number",
+    0xF1A3: "vehicle_Manufacturer_EOL_Prog_Info_Code",
+    0xF1A5: "vehicle_Manufacturer_ECU_Harware_W/O_Boot_Number",
+    0xF1A6: "engine_Number",
+    0xF1A7: "vehicle_Number_and_Type_Identifier",
+    0xF1A9: "lifetime_ECU_Runtime_at_Software_Update_Stamp",
+    0xF1AA: "mileage_At_Software_Update_Stamp",
+    0xF1AB: "data_At_Software_Update_Stamp",
+    0xF1AC: "vehicle_Manufacturer_Data_Identifier",
+    0xF1AD: "active_ECU_Software_Data_Identifier",
+    0xF1D1: "Root_Certificate_Fingerprint",
+}
+# user will replace/extend DID_MAP externally if needed
+
