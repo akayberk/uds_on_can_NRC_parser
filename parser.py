@@ -103,19 +103,19 @@ class AscParser:
         # We'll attempt to produce a "normalized" uds_payload (list[int]) that has PCI stripped.
         final_payload = None
         # Only attempt reassembly for Rx frames (we don't reassemble Tx from tester)
-        if direction == "Rx" and data_bytes:
-            info = iso_tp_frame_info(data_bytes)
-            ft = info["frame_type"]
-            if ft == 0:  # Single Frame: data_bytes already UDS payload
-                final_payload = info["data_bytes"]
-            elif ft == 1 and canid_num is not None:  # First Frame: store initial bytes and expected length
+        #if direction == "Rx"and data_bytes:
+        info = iso_tp_frame_info(data_bytes)
+        ft = info["frame_type"]
+        if ft == 0:  # Single Frame: data_bytes already UDS payload
+            final_payload = info["data_bytes"]
+        elif ft == 1 and canid_num is not None:  # First Frame: store initial bytes and expected length
                 total = info.get("ff_total_len", 0)
                 part = bytes(info.get("data_bytes", []))
                 self.reassembly_buffers[canid_num]["data"] = part
                 self.reassembly_buffers[canid_num]["expected_len"] = total
                 # don't return a parsed entry yet — wait for CFs
                 return None
-            elif ft == 2 and canid_num is not None:  # Consecutive Frame
+        elif ft == 2 and canid_num is not None:  # Consecutive Frame
                 buf = self.reassembly_buffers.get(canid_num)
                 if not buf or buf["expected_len"] == 0:
                     # No matching FF: maybe this is a stray CF; ignore
@@ -133,16 +133,16 @@ class AscParser:
                 else:
                     # incomplete, wait for more CFs
                     return None
-            elif ft == 3:
+        elif ft == 3:
                 # Flow Control frame (controller->sender). We ignore FC frames as data; they are control.
                 # But we want to surface them if debugging; for now ignore (do not create parsed entry).
                 return None
-            else:
+        else:
                 # No PCI or unknown structure — treat data_bytes as raw UDS payload
                 final_payload = data_bytes
-        else:
+        #else:
             # For Tx frames or empty payloads: keep original data_bytes (no PCI strip)
-            final_payload = data_bytes
+        final_payload = data_bytes
 
         # final_payload is list[int] now (maybe empty)
         if final_payload is None:
@@ -206,19 +206,19 @@ class AscParser:
         if not uds:
             return None
         # Negative responses: could appear either as [0x7F, ReqSID, NRC] or with PCI -> [PCI, 0x7F, ReqSID, NRC]
-        if len(uds) >= 2 and uds[1] == 0x7F:
+        if len(uds) >= 2 and uds[0] > 0x01 and uds[0] < 0x08 and uds[1] == 0x7F:
             return uds[3]  # original req SID
         # Positive responses echo SID+0x40
         first = uds[0]
-        if first >= 0x40 and (first - 0x40) in UDS_SERVICES:
+        if uds[1] == 0x40 and uds[0] > 0x01 and uds[0]< 0x08 and (uds[1] - 0x40) in UDS_SERVICES: ##kod burada patlıyor olabilir:!!!!
             return first - 0x40
         # For requests, first byte is SID
-        if first in UDS_SERVICES:
-            return first
+        if len(uds) >= 2 and uds[0] > 0x01 and uds[0]< 0x08:
+            return uds[3]
         # fallback
         return first
 
-    def pair_tx_rx(self, max_time_delta=2.0):
+    def pair_tx_rx(self, max_time_delta=0.05):
         """
         Enhanced pairing:
          - For each Tx, collect candidate Rx frames that are after Tx and within time window.
@@ -392,29 +392,30 @@ class AscParser:
         did = None
         did_name = ""
         if tx_sid in (0x22, 0x2E) and len(tx["data"]) >= 3:
-            did = (tx["data"][1] << 8) | tx["data"][2]
+            did = (tx["data"][2] << 8) | tx["data"][3]  # Correctly combine 2nd and 3rd bytes
             did_name = DID_MAP.get(did, f"DID_0x{did:04X}")
-
         # For positive responses, extract the data bytes after DID (if present) and convert to ASCII where reasonable
         ascii_text = ""
         is_positive = False
-        if rp:
+        #if rp in range (0x02,0x08) and rp:
+        
             # determine positive: first byte >= 0x40
-            first_byte = rp[0]
-            if first_byte >= 0x40:
-                is_positive = True
-                # if response to DID (22), DID bytes likely at rp[1:3], payload starts at rp[3:]
-                payload_after_did = []
-                if first_byte - 0x40 in (0x22, 0x2E) and len(rp) >= 3:
-                    payload_after_did = rp[3:]
-                else:
-                    # otherwise drop first byte (SID) and take rest
-                    payload_after_did = rp[1:]
-                if payload_after_did:
-                    ascii_text = bytes_to_ascii_str(payload_after_did)
-
+        first_byte = rp[1]
+        if first_byte >= 0x40:
+            is_positive = True
+            # if response to DID (22), DID bytes likely at rp[1:3], payload starts at rp[3:]
+            payload_after_did = []
+            if first_byte - 0x40 in (0x22, 0x2E) and len(rp) >= 3:
+                payload_after_did = rp[3:]
+            else:
+                # otherwise drop first byte (SID) and take rest
+                payload_after_did = rp[1:]
+            if payload_after_did:
+                ascii_text = bytes_to_ascii_str(payload_after_did)
+        
         service_name = UDS_SERVICES.get(tx_sid, (f"SID_0x{tx_sid:02X}", ""))[0] if tx_sid else ""
-
+   
+        
         result = {
             "tx_time": tx["timestamp"],
             "rx_time": rx["timestamp"] if rx else None,
@@ -453,8 +454,14 @@ def hex_bytes_to_ints(byte_str):
 
 
 def ints_to_hex_str(lst):
-    return " ".join(f"{b:02X}" for b in lst) if lst else ""
+    return " ".join(f"{b:02X}" for b in lst) if lst else "" #this function takes a list of integers (lst) and returns a single string 
+    #where each integer is converted to a 2-digit uppercase hexadecimal representation, separated by spaces.
+    #b: the current integer from the list.
+    #:02X:
 
+    #0: pad with zeros if the hex value is less than 2 digits.
+    #2: always use 2 characters.
+    #X: convert to uppercase hexadecimal (use x for lowercase).
 
 def bytes_to_ascii_str(bts):
     try:
