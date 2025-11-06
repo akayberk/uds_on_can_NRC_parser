@@ -200,7 +200,7 @@ class App:
             # show first/last 0x78 metadata if present
             if r.get("first_78") and r.get("last_78"):
                 extra = f" [ResponsePending first/last present]"
-            return f"[TX {tx_ts}] {r['tx_can_id']} -> [RX {rx_ts}] {r['rx_can_id']} | {sid} | {tr(self.lang.get(), 'negative_label')}: {nrc_text}| TX:{r['tx_payload']} RX:{r['rx_payload']}"
+            return f"[TX {tx_ts}] {r['tx_can_id']} -> [RX {rx_ts}] {r['rx_can_id']} | {sid}{did_info} | {tr(self.lang.get(), 'negative_label')}: {nrc_text}| TX:{r['tx_payload']} RX:{r['rx_payload']}"
         else:
             # positive: if ascii available show it
             ascii_part = f" ASCII:'{r['ascii']}'" if r['ascii'] else ""
@@ -252,7 +252,6 @@ def main():
     root.minsize(900, 700)
     app = App(root)
     root.mainloop()
-
 
 if __name__ == "__main__":
     main()
