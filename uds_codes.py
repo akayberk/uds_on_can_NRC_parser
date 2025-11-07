@@ -12,6 +12,17 @@ NRC_MAP = {
     0x21: "BusyRepeatRequest",
     0x22: "ConditionsNotCorrect",
     0x24: "RequestSequenceError",
+    0x25: "No Response from Subnet Component",
+    0x26: "Failure Prevents Execution of Requested Action",
+    0x27: "Request Not Accepted (Security Access)",
+    0x28: "Invalid Key",
+    0x2A: "Exceeded Number of Attempts",
+    0x2B: "Required Time Delay Not Expired",
+    0x2C: "Upload/Download Not Accepted",
+    0x2D: "Transfer Data Suspended or Interrupted",
+    0x2E: "Write to Memory Failed",
+    0x2F: "Incorrect Block Sequence Counter",
+    0x30: "Invalid Block Size",
     0x31: "RequestOutOfRange",
     0x33: "SecurityAccessDenied",
     0x35: "InvalidKey",
@@ -35,6 +46,7 @@ UDS_SERVICES = {
     0x2A: ("ReadDataByPeriodicIdentifier", "Read data by periodic identifier"),
     0x2E: ("WriteDataByIdentifier", "Write data by identifier"),
     0x2F: ("IO_ControlByIdentifier", "Write data by identifier"),
+    0x30: ("FlowControl", "Send"),
     0x31: ("RoutineControl", "Start/stop/query routines"),
     0x3E: ("TesterPresent", "Keepalive / Tester present"),
     0x34: ("RequestDownload", "Request to start a download"),
@@ -47,7 +59,6 @@ UDS_SERVICES = {
     
 }
 
-# Example DID map (user said they added SUB_FUNCTIONS). Keep a small set; user can replace with their full dict.
 DID_MAP = {
     0xF170: "EOL_Fingerprint_Data_Identifer",
     0xF171: "general_Fingerprint_Data_Identifer#1",
