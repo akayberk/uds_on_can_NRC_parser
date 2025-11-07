@@ -192,7 +192,11 @@ class AscParser:
                 continue
 
             if parsed["dir"] == "Tx":
-                self.tx_entries.append(parsed)
+                # Check if first byte of Tx data is in range (0x02, 0x08)
+                data = parsed.get("data",[])
+                if data and 0x02<= data[0] < 0x08:
+                    data
+                    self.tx_entries.append(parsed)
             else:
                 self.rx_entries.append(parsed)
 
@@ -217,8 +221,25 @@ class AscParser:
             return uds[3]
         # fallback
         return first
+    
+    '''def is_tx_rx_match(tx_data, rx_data):
+        if not tx_data or not rx_data:
+            return False
 
-    def pair_tx_rx(self, max_time_delta=0.05):
+        # Condition 1: tx[0] in range (0x02, 0x08)
+        if not (0x02 <= tx_data[0] < 0x08):
+            return False
+
+        # Condition 2: tx[1] == rx[0] OR (tx[1] == rx[1] and rx[0] == 0x7F)
+        if len(tx_data) >= 2 and len(rx_data) >= 2:
+            if tx_data[1] == rx_data[0]:
+                return True
+            if rx_data[0] == 0x7F and tx_data[1] == rx_data[1]:
+                return True
+
+        return False
+    '''
+    def pair_tx_rx(self,  max_time_delta=0.05):
         """
         Enhanced pairing:
          - For each Tx, collect candidate Rx frames that are after Tx and within time window.
@@ -250,14 +271,14 @@ class AscParser:
                 # extract DIDs where applicable (22/2E)
                 tx_did = None
                 rx_did = None
-                if tx_id in (0x22, 0x2E) and len(tx["data"]) >= 3:
+                if len(tx["data"]) >= 3:
                     tx_did = (tx["data"][1] << 8) | tx["data"][2]
                 # rx: if positive response (SID+0x40) has DID next
                 # attempt to parse UDS payload (pci stripped) using iso_tp_frame_info
                 rx_payload = iso_tp_frame_info(rx["data"]).get("data_bytes", rx["data"])
                 if rx_payload:
                     # if positive response 0x40+sid and length >=3, may include DID at [1:3]
-                    if rx_payload[0] >= 0x40:
+                    if rx_payload[0] == tx["data"][1]+0x40:
                         maybe_req_sid = rx_payload[0] - 0x40
                         if maybe_req_sid in (0x22, 0x2E) and len(rx_payload) >= 3:
                             rx_did = (rx_payload[1] << 8) | rx_payload[2]
@@ -267,9 +288,10 @@ class AscParser:
                         # negative does not carry DID usually
                 # Now decide if rx is candidate: same SID or negative for that SID
                 match_sid = (tx_id is not None and rx_id is not None and tx_id == rx_id)
+                match_sid if ((tx["data"][1]==rx_payload[0]) ) else ""
                 is_negative = False
                 # robust negative detection for rx_payload
-                if len(rx_payload) >= 2 and rx_payload[0] == 0x7F:
+                if len(rx_payload) >= 2 and rx_payload[0] == 0x7F: #this section is checked and it works well
                     is_negative = True
                 elif len(rx_payload) >= 2 and rx_payload[1] == 0x7F:
                     # PCI present case
@@ -281,7 +303,7 @@ class AscParser:
 
             if not candidates:
                 # no rx found within window
-                self.unpaired_tx.append(tx)
+                #self.unpaired_tx.append(tx) #unpaired_tx list can be disabled by commenting this line of the code.
                 continue
 
             # From candidates, prefer:
@@ -350,7 +372,7 @@ class AscParser:
             self.paired.append(pair_meta)
 
         # rebuild unpaired_rx list from rx_pool leftovers
-        self.unpaired_rx = [x for x in rx_pool if x is not None]
+        #self.unpaired_rx = [x for x in rx_pool if x is not None] #unpaired rx list can be disabled by commenting this line.
 
     def interpret_pair(self, pair_meta):
         """
@@ -391,7 +413,7 @@ class AscParser:
         # DID extraction for TX (22/2E)
         did = None
         did_name = ""
-        if tx_sid in (0x22, 0x2E) and len(tx["data"]) >= 3:
+        if tx_sid in (0x10, 0x86) and len(tx["data"]) >= 3:
             did = (tx["data"][2] << 8) | tx["data"][3]  # Correctly combine 2nd and 3rd bytes
             did_name = DID_MAP.get(did, f"DID_0x{did:04X}")
         # For positive responses, extract the data bytes after DID (if present) and convert to ASCII where reasonable
@@ -401,11 +423,11 @@ class AscParser:
         
             # determine positive: first byte >= 0x40
         first_byte = rp[1]
-        if first_byte >= 0x40:
+        if first_byte - 0x40 ==tx["data"][1]:
             is_positive = True
             # if response to DID (22), DID bytes likely at rp[1:3], payload starts at rp[3:]
             payload_after_did = []
-            if first_byte - 0x40 in (0x22, 0x2E) and len(rp) >= 3:
+            if len(rp) >= 3:
                 payload_after_did = rp[3:]
             else:
                 # otherwise drop first byte (SID) and take rest
