@@ -28,6 +28,7 @@ NRC_MAP = {
     0x35: "InvalidKey",
     0x36: "ExceedNumberOfAttempts",
     0x37: "RequiredTimeDelayNotExpired",
+    0x7E: "Sub-function Not Supported in Active Session",
     0x7F: "GeneralProgrammingFailure",
     0x78: "ResponsePending",
     0x83: "UploadDownloadNotAccepted",
@@ -99,4 +100,5 @@ DID_MAP = {
     0xF1D1: "Root_Certificate_Fingerprint",
 }
 # user will replace/extend DID_MAP externally if needed
+
 
